@@ -1,0 +1,27 @@
+input:
+  amqp_0_9:
+    urls: ["amqp://USER:PASS@rabbit:5672/"]
+    queue: fila_txt_posicional
+    consumer_tag: benthos-pos
+
+# Cada linha vira 1 mensagem; se vier arquivo inteiro, use input file+split.
+processors:
+  - bloblang: |
+      let line = content().string()
+      root = {
+        "tipo_registro":  $line.slice(0, 1).string(),
+        "cpf":            $line.slice(1, 12).string().trim(),
+        "nome":           $line.slice(12, 52).string().trim(),
+        "data_nasc":      $line.slice(52, 60).string(),            # AAAAMMDD
+        "valor_compra":   $line.slice(60, 72).string(),            # sem ponto
+        "uf":             $line.slice(72, 74).string()
+      }
+  # Opcional: validações
+  - bloblang: |
+      root = if this.tipo_registro != "1" { deleted() } else { this }
+
+output:
+  amqp_0_9:
+    urls: ["amqp://USER:PASS@rabbit:5672/"]
+    exchange: exchange_json
+    key: fila_json
