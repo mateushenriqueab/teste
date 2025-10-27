@@ -201,3 +201,15 @@ export default function ApplicationsPage() {
     </Page>
   );
 }
+
+
+    <Box display="flex" justifyContent="flex-end">
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<AddCircleOutlineIcon />}
+                    onClick={handleCriarAplicacao}
+                  >
+                    Criar Aplicação
+                  </Button>
+                </Box>
