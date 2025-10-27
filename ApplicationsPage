@@ -1,0 +1,203 @@
+// packages/app/src/plugins/apps/ApplicationsPage.tsx
+import React, { useMemo, useState } from 'react';
+import {
+  Page,
+  Header,
+  Content,
+  ContentHeader,
+  SupportButton,
+  InfoCard,
+  StatusOK,
+  Progress,
+  Link
+} from '@backstage/core-components';
+import {
+  TextField,
+  MenuItem,
+  Button,
+  Chip,
+  Grid,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Paper,
+  Box,
+} from '@material-ui/core';
+import LaunchIcon from '@material-ui/icons/Launch';
+import SearchIcon from '@material-ui/icons/Search';
+
+// Mock dataset — substitua por dados reais quando quiser
+const MOCK_APPS = [
+  { id: 'app-1', name: 'Portal Billing', dept: 'Financeiro', tribe: 'Pagamentos', squad: 'Cobrança', owner: 'time-billing', lifecycle: 'production', repo: 'git.company/portal-billing' },
+  { id: 'app-2', name: 'Auth Service', dept: 'Plataforma', tribe: 'Identidade', squad: 'Auth', owner: 'team-auth', lifecycle: 'production', repo: 'git.company/auth-service' },
+  { id: 'app-3', name: 'Event Ingestor', dept: 'Dados', tribe: 'Events', squad: 'Ingest', owner: 'team-events', lifecycle: 'staging', repo: 'git.company/event-ingestor' },
+  { id: 'app-4', name: 'Gateway API', dept: 'Plataforma', tribe: 'API', squad: 'Gateway', owner: 'team-gateway', lifecycle: 'production', repo: 'git.company/gateway' },
+  { id: 'app-5', name: 'Reports UI', dept: 'Financeiro', tribe: 'BI', squad: 'Reports', owner: 'team-reports', lifecycle: 'development', repo: 'git.company/reports-ui' },
+  { id: 'app-6', name: 'Kafka Streams', dept: 'Dados', tribe: 'Streaming', squad: 'Streams', owner: 'team-streams', lifecycle: 'production', repo: 'git.company/kafka-streams' },
+];
+
+// helpers to get unique values for filters
+const uniq = (arr: string[]) => Array.from(new Set(arr)).sort();
+
+export default function ApplicationsPage() {
+  const [q, setQ] = useState('');
+  const [dept, setDept] = useState('All');
+  const [tribe, setTribe] = useState('All');
+  const [squad, setSquad] = useState('All');
+  const [lifecycle, setLifecycle] = useState('All');
+
+  const departments = useMemo(() => ['All', ...uniq(MOCK_APPS.map(a => a.dept))], []);
+  const tribes = useMemo(() => ['All', ...uniq(MOCK_APPS.map(a => a.tribe))], []);
+  const squads = useMemo(() => ['All', ...uniq(MOCK_APPS.map(a => a.squad))], []);
+  const lifecycles = useMemo(() => ['All', ...uniq(MOCK_APPS.map(a => a.lifecycle))], []);
+
+  const filtered = useMemo(() => {
+    return MOCK_APPS.filter(app => {
+      if (dept !== 'All' && app.dept !== dept) return false;
+      if (tribe !== 'All' && app.tribe !== tribe) return false;
+      if (squad !== 'All' && app.squad !== squad) return false;
+      if (lifecycle !== 'All' && app.lifecycle !== lifecycle) return false;
+      if (q.trim()) {
+        const s = q.trim().toLowerCase();
+        return (
+          app.name.toLowerCase().includes(s) ||
+          app.owner.toLowerCase().includes(s) ||
+          app.repo.toLowerCase().includes(s)
+        );
+      }
+      return true;
+    });
+  }, [dept, tribe, squad, lifecycle, q]);
+
+  // quick counts to show on top
+  const total = MOCK_APPS.length;
+  const shown = filtered.length;
+
+  return (
+    <Page themeId="tool">
+      <Header title="Aplicações" subtitle="Encontre apps por departamento, tribo, squad ou busca livre" />
+      <Content>
+        <ContentHeader title="Visão geral">
+          <SupportButton>Aplicações</SupportButton>
+        </ContentHeader>
+
+        <Grid container spacing={2} style={{ marginBottom: 16 }}>
+          <Grid item xs={12} md={4}>
+            <InfoCard title="Resumo" subheader={`mostrando ${shown} de ${total} aplicações`}>
+              <Box display="flex" gap={8} alignItems="center" flexWrap="wrap">
+                <Chip label={`Departamentos: ${uniq(MOCK_APPS.map(a => a.dept)).length}`} />
+                <Chip label={`Tribes: ${uniq(MOCK_APPS.map(a => a.tribe)).length}`} />
+                <Chip label={`Squads: ${uniq(MOCK_APPS.map(a => a.squad)).length}`} />
+                <Chip label={`Prod: ${MOCK_APPS.filter(a => a.lifecycle === 'production').length}`} />
+              </Box>
+            </InfoCard>
+          </Grid>
+
+          <Grid item xs={12} md={8}>
+            <Paper style={{ padding: 12 }}>
+              <Grid container spacing={1} alignItems="center">
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    variant="outlined"
+                    size="small"
+                    label="Buscar (nome, owner, repo)"
+                    fullWidth
+                    value={q}
+                    onChange={e => setQ(e.target.value)}
+                    InputProps={{ startAdornment: <SearchIcon style={{ marginRight: 8 }} /> }}
+                  />
+                </Grid>
+
+                <Grid item xs={6} sm={3} md={2}>
+                  <TextField select label="Departamento" size="small" value={dept} onChange={(e) => setDept(e.target.value)}>
+                    {departments.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={6} sm={3} md={2}>
+                  <TextField select label="Tribe" size="small" value={tribe} onChange={(e) => setTribe(e.target.value)}>
+                    {tribes.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={6} sm={3} md={2}>
+                  <TextField select label="Squad" size="small" value={squad} onChange={(e) => setSquad(e.target.value)}>
+                    {squads.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={6} sm={3} md={2}>
+                  <TextField select label="Lifecycle" size="small" value={lifecycle} onChange={(e) => setLifecycle(e.target.value)}>
+                    {lifecycles.map(l => <MenuItem key={l} value={l}>{l}</MenuItem>)}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={12} md={12} style={{ textAlign: 'right' }}>
+                  <Button variant="outlined" onClick={() => { setDept('All'); setTribe('All'); setSquad('All'); setLifecycle('All'); setQ(''); }}>
+                    Limpar filtros
+                  </Button>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Lista / tabela */}
+        <Paper>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Aplicação</TableCell>
+                <TableCell>Departamento</TableCell>
+                <TableCell>Tribe</TableCell>
+                <TableCell>Squad</TableCell>
+                <TableCell>Owner</TableCell>
+                <TableCell>Lifecycle</TableCell>
+                <TableCell>Repo</TableCell>
+                <TableCell align="right">Ações</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filtered.map(app => (
+                <TableRow key={app.id} hover>
+                  <TableCell>
+                    <Box display="flex" flexDirection="column">
+                      <strong>{app.name}</strong>
+                      <span style={{ color: '#666', fontSize: 12 }}>{app.id}</span>
+                    </Box>
+                  </TableCell>
+                  <TableCell>{app.dept}</TableCell>
+                  <TableCell>{app.tribe}</TableCell>
+                  <TableCell>{app.squad}</TableCell>
+                  <TableCell>{app.owner}</TableCell>
+                  <TableCell>
+                    {app.lifecycle === 'production' ? <Chip label="production" /> : <Chip label={app.lifecycle} />}
+                  </TableCell>
+                  <TableCell>
+                    <Link to={app.repo} target="_blank" underline="always">
+                      {app.repo} <LaunchIcon style={{ fontSize: 14, marginLeft: 6 }} />
+                    </Link>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Button size="small" variant="outlined" onClick={() => alert(`Abrir página de ${app.name} (mock)`)}>Abrir</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+
+              {filtered.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} style={{ textAlign: 'center', color: '#666' }}>
+                    Nenhuma aplicação encontrada com os filtros atuais.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Paper>
+
+      </Content>
+    </Page>
+  );
+}
