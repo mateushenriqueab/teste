@@ -1,0 +1,14 @@
+apiVersion: backstage.io/v1alpha1
+kind: Application
+metadata:
+  name: payment-service
+  description: Serviço de pagamentos interno
+spec:
+  department: Engenharia
+  tribe: Pagamentos
+  squad: Pix
+  system: financial-platform
+  owner: squad-pix
+  language: Java
+  repository: https://github.com/empresa/payment-service
+  status: production
